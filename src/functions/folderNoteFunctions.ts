@@ -1,7 +1,7 @@
 /* eslint-disable complexity */
 /* eslint-disable max-len */
 import type FolderNotesPlugin from '../main';
-import { getStorageLocation } from './storageLocation';
+import { getStorageLocation, getStorageLocationForNote } from './storageLocation';
 import ExistingFolderNoteModal from '../modals/ExistingNote';
 import { applyTemplate } from '../template';
 import {
@@ -515,7 +515,8 @@ export function getFolder(
 ): TFolder | TAbstractFile | null {
 	if (!file) return null;
 	let folderName = extractFolderName(plugin.settings.folderNoteName, file.basename);
-	const fileStorage = storageLocation ?? getStorageLocation(plugin, getFolderPathFromString(file.path));
+	const fileStorage = storageLocation
+		?? getStorageLocationForNote(plugin, getFolderPathFromString(file.path), file.basename);
 	if (
 		plugin.settings.folderNoteName === file.basename &&
 		fileStorage === 'insideFolder'
@@ -555,7 +556,7 @@ export function getFolderNoteFolder(
 		filePath = folderNote.path;
 	}
 	const folderName = extractFolderName(plugin.settings.folderNoteName, fileName);
-	const noteStorage = getStorageLocation(plugin, getFolderPathFromString(filePath));
+	const noteStorage = getStorageLocationForNote(plugin, getFolderPathFromString(filePath), fileName);
 	if (!plugin.settings.folderNoteName.includes('{{folder_name}}') && noteStorage === 'insideFolder') {
 		if (folderNote instanceof TFile) {
 			return folderNote.parent;
@@ -605,7 +606,11 @@ function adjustFolderPathForStorage(
 	plugin: FolderNotesPlugin,
 	storageLocation?: string,
 ): void {
-	const effective = storageLocation ?? getStorageLocation(plugin, getFolderPathFromString(folderPath));
+	// `folderPath` is the folder itself here, not a note inside it, so the rule is
+	// looked up on it directly. Resolving on its parent missed a rule declared on
+	// the folder exactly — `System/Class` fell back to the global setting while
+	// everything beneath it resolved correctly.
+	const effective = storageLocation ?? getStorageLocation(plugin, folderPath);
 	if (effective === 'parentFolder') {
 		folder.path = getFolderPathFromString(folderPath);
 	}
