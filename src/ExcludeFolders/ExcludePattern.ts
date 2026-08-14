@@ -15,8 +15,6 @@ export class ExcludePattern {
 	detached: boolean = false;
 	detachedFilePath?: string;
 	showFolderNote: boolean;
-	/** Overrides the global storage location for this folder. Unset = inherit. */
-	storageLocation?: string;
 	constructor(
 		pattern: string,
 		position: number,
@@ -37,6 +35,5 @@ export class ExcludePattern {
 		this.path = '';
 		this.hideInSettings = false;
 		this.showFolderNote = plugin.settings.excludePatternDefaultSettings.showFolderNote;
-		this.storageLocation = plugin.settings.excludePatternDefaultSettings.storageLocation;
 	}
 }

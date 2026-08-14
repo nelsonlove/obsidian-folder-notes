@@ -20,25 +20,6 @@ export default class ExcludedFolderSettings extends Modal {
 		contentEl.empty();
 		contentEl.createEl('h2', { text: 'Excluded folder settings' });
 		new Setting(contentEl)
-			.setName('Storage location')
-			.setDesc(
-				'Where folder notes are kept for this folder. '
-				+ 'Inherit uses the global setting; an override lets one subtree differ from the rest of the vault.',
-			)
-			.addDropdown((dropdown) =>
-				dropdown
-					.addOption('', 'Inherit global setting')
-					.addOption('insideFolder', 'Inside the folder')
-					.addOption('parentFolder', 'In the parent folder')
-					.setValue(this.excludedFolder.storageLocation ?? '')
-					.onChange(async (value) => {
-						// Empty means inherit, so the field is cleared rather than set to ''.
-						this.excludedFolder.storageLocation = value === '' ? undefined : value;
-						await this.plugin.saveSettings(true);
-					}),
-			);
-
-		new Setting(contentEl)
 			.setName('Include subfolders')
 			.setDesc('Choose if the subfolders of the folder should also be excluded')
 			.addToggle((toggle) =>

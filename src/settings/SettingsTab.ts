@@ -12,6 +12,8 @@ import { renderFileExplorer } from './FileExplorerSettings';
 import { renderPath } from './PathSettings';
 import { renderFolderOverview } from './FolderOverviewSettings';
 import { renderExcludeFolders } from './ExcludedFoldersSettings';
+import { renderFolderSettings } from './FolderSettingsPage';
+import type { FolderSetting } from 'src/FolderSettings/FolderSetting';
 import { getFolderPathFromString } from '../functions/utils';
 import type { WhitelistedFolder } from 'src/ExcludeFolders/WhitelistFolder';
 import type { WhitelistedPattern } from 'src/ExcludeFolders/WhitelistPattern';
@@ -28,6 +30,7 @@ export interface FolderNotesSettings {
 	autoCreateForFiles: boolean;
 	enableCollapsing: boolean;
 	excludeFolders: (ExcludePattern | ExcludedFolder)[];
+	folderSettings: FolderSetting[];
 	whitelistFolders: (WhitelistedFolder | WhitelistedPattern)[];
 	showDeleteConfirmation: boolean;
 	showRenameConfirmation: boolean;
@@ -97,6 +100,7 @@ export const DEFAULT_SETTINGS: FolderNotesSettings = {
 	autoCreateForFiles: false,
 	enableCollapsing: false,
 	excludeFolders: [],
+	folderSettings: [],
 	whitelistFolders: [],
 	showDeleteConfirmation: true,
 	underlineFolder: true,
@@ -232,6 +236,10 @@ export class SettingsTab extends PluginSettingTab {
 			name: 'Exclude folders',
 			id: 'exclude_folders',
 		},
+		FOLDER_SETTINGS: {
+			name: 'Folder settings',
+			id: 'folder_settings',
+		},
 		FILE_EXPLORER: {
 			name: 'File explorer',
 			id: 'file_explorer',
@@ -253,6 +261,9 @@ export class SettingsTab extends PluginSettingTab {
 				break;
 			case this.TABS.EXCLUDE_FOLDERS.id:
 				void renderExcludeFolders(this);
+				break;
+			case this.TABS.FOLDER_SETTINGS.id:
+				void renderFolderSettings(this);
 				break;
 			case this.TABS.FILE_EXPLORER.id:
 				void renderFileExplorer(this);
