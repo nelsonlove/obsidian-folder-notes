@@ -1,3 +1,4 @@
+import { getStorageLocation } from 'src/functions/storageLocation';
 import { TFile, TFolder, Notice, type TAbstractFile } from 'obsidian';
 import type FolderNotesPlugin from 'src/main';
 import {
@@ -83,9 +84,10 @@ function isFolderRename(folder: TFolder, oldPath: string): boolean {
 }
 
 export function handleFolderMove(file: TFolder, oldPath: string, plugin: FolderNotesPlugin): void {
-	if (plugin.settings.storageLocation === 'insideFolder') { return; }
+	const moveStorage = getStorageLocation(plugin, oldPath);
+	if (moveStorage === 'insideFolder') { return; }
 	if (!plugin.settings.syncMove) { return; }
-	const folderNote = getFolderNote(plugin, oldPath, plugin.settings.storageLocation);
+	const folderNote = getFolderNote(plugin, oldPath, moveStorage);
 	if (!(file instanceof TFolder) || !folderNote) return;
 	const newFolder = plugin.app.vault.getAbstractFileByPath(file.path);
 	if (!(newFolder instanceof TFolder)) return;
@@ -162,7 +164,7 @@ function getArgs(plugin: FolderNotesPlugin, file: TFile, oldPath: string): {
 	const newFolder = getFolderNoteFolder(plugin, file, file.basename);
 	let excludedFolder = getExcludedFolder(plugin, newFolder?.path || '', true);
 	const oldFolder = getFolderNoteFolder(plugin, oldPath, oldFileName);
-	const folderNote = getFolderNote(plugin, oldPath, plugin.settings.storageLocation, file);
+	const folderNote = getFolderNote(plugin, oldPath, getStorageLocation(plugin, oldPath), file);
 
 	return {
 		folderName,
@@ -230,7 +232,7 @@ export async function handleFolderRename(
 	if (!plugin.settings.syncFolderName) { return; }
 
 	let newPath = '';
-	if (plugin.settings.storageLocation === 'parentFolder') {
+	if (getStorageLocation(plugin, oldPath) === 'parentFolder') {
 		const parentFolderPath = getFolderPathFromString(file.path);
 		const oldParentFolderPath = getFolderPathFromString(oldPath);
 		if (parentFolderPath !== oldParentFolderPath) {
@@ -268,7 +270,7 @@ export async function handleFileRename(
 	const newFolder = getFolderNoteFolder(plugin, file, file.basename);
 	const excludedFolder = getExcludedFolder(plugin, newFolder?.path || '', true);
 	const detachedExcludedFolder = getDetachedFolder(plugin, newFolder?.path || '');
-	const folderNote = getFolderNote(plugin, oldPath, plugin.settings.storageLocation, file);
+	const folderNote = getFolderNote(plugin, oldPath, getStorageLocation(plugin, oldPath), file);
 
 	// Handle folder note creation
 	if (shouldCreateFolderNote(excludedFolder, folderName, newFolder, detachedExcludedFolder)) {
@@ -318,7 +320,7 @@ async function renameFolderOnFileRename(
 	}
 
 	let newFolderPath = '';
-	if (plugin.settings.storageLocation === 'insideFolder') {
+	if (getStorageLocation(plugin, oldFolder.path) === 'insideFolder') {
 		if (oldFolder.parent?.path === '/') {
 			newFolderPath = `${newFolderName}`;
 		} else {

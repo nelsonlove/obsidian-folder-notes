@@ -11,6 +11,7 @@ import {
 	type MarkdownFileInfo,
 } from 'obsidian';
 import type FolderNotesPlugin from './main';
+import { getStorageLocation, getStorageLocationForNote } from './functions/storageLocation';
 import {
 	getFolderNote,
 	createFolderNote,
@@ -242,7 +243,7 @@ export class Commands {
 							new Notice('Folder note already exists');
 							return false;
 						}
-						if (this.plugin.settings.storageLocation === 'parentFolder') {
+						if (getStorageLocation(this.plugin, folderFullPath) === 'parentFolder') {
 							if (
 								this.app.vault.getAbstractFileByPath(
 									folderPath + '/' + text + this.plugin.settings.folderNoteType,
@@ -276,7 +277,15 @@ export class Commands {
 			this.app.workspace.on('file-menu', (menu: Menu, file: TAbstractFile) => {
 				let folder: TAbstractFile | TFolder | null = file.parent;
 				if (file instanceof TFile) {
-					if (this.plugin.settings.storageLocation === 'insideFolder') {
+					// Which folder "Turn into folder note for X" offers depends on the mode
+					// in force for *this* note, not the global setting — otherwise the item
+					// names the note's parent when the note's own folder is the target.
+					const noteStorage = getStorageLocationForNote(
+						this.plugin,
+						file.parent?.path ?? '',
+						file.basename,
+					);
+					if (noteStorage === 'insideFolder') {
 						folder = file.parent;
 					} else {
 						const { folderNoteName } = this.plugin.settings;
@@ -555,7 +564,7 @@ export class Commands {
 							if (folder instanceof TFolder) {
 								return new Notice('Folder note already exists');
 							}
-							if (this.plugin.settings.storageLocation === 'parentFolder') {
+							if (getStorageLocation(this.plugin, `${folderPath}/${text}`) === 'parentFolder') {
 								if (
 									this.app.vault.getAbstractFileByPath(
 										folderPath +

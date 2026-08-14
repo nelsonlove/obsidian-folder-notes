@@ -19,6 +19,7 @@ import { handleRename } from './events/handleRename';
 import {
 	getFolderNote, getFolder, openFolderNote, createFolderNote,
 } from './functions/folderNoteFunctions';
+import { getStorageLocation } from './functions/storageLocation';
 import { handleCreate } from './events/handleCreate';
 import { FrontMatterTitlePluginHandler } from './events/FrontMatterTitle';
 import { FolderOverviewSettings } from './obsidian-folder-overview/src/modals/Settings';
@@ -517,7 +518,8 @@ export default class FolderNotesPlugin extends Plugin {
 		const cleanAttachmentFolderPath = attachmentFolderPath?.replace('./', '') || '';
 		const attachmentsAreInRootFolder = attachmentFolderPath === './'
 			|| attachmentFolderPath === '';
-		const threshold = this.settings.storageLocation === 'insideFolder' ? 1 : 0;
+		// A folder whose note lives inside it still has that one child.
+		const threshold = getStorageLocation(this, folder.path) === 'insideFolder' ? 1 : 0;
 		if (folder.children.length === 0) {
 			void addCSSClassToFileExplorerEl(folder.path, 'fn-empty-folder', false, this);
 		}
