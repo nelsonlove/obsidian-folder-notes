@@ -1,6 +1,7 @@
 /* eslint-disable complexity */
 /* eslint-disable max-len */
 import type FolderNotesPlugin from '../main';
+import { getStorageLocation } from './storageLocation';
 import ExistingFolderNoteModal from '../modals/ExistingNote';
 import { applyTemplate } from '../template';
 import {
@@ -69,14 +70,15 @@ export async function createFolderNote(
 		).open();
 	}
 
-	if (plugin.settings.storageLocation === 'parentFolder') {
+	const effectiveStorage = getStorageLocation(plugin, folderPath);
+	if (effectiveStorage === 'parentFolder') {
 		const parentFolderPath = getFolderPathFromString(folderPath);
 		if (parentFolderPath.trim() === '') {
 			path = `${fileName}${folderNoteType}`;
 		} else {
 			path = `${parentFolderPath}/${fileName}${folderNoteType}`;
 		}
-	} else if (plugin.settings.storageLocation === 'vaultFolder') {
+	} else if (effectiveStorage === 'vaultFolder') {
 		path = `${fileName}${folderNoteType}`;
 	} else {
 		path = `${folderPath}/${fileName}${folderNoteType}`;
@@ -292,7 +294,7 @@ export async function turnIntoFolderNote(
 	const fileName = plugin.settings.folderNoteName.replace('{{folder_name}}', folderName);
 
 	let path = `${folder.path}/${fileName}.${extension}`;
-	if (plugin.settings.storageLocation === 'parentFolder') {
+	if (getStorageLocation(plugin, folder.path) === 'parentFolder') {
 		const parentFolderPath = folder.parent?.path;
 		if (!parentFolderPath) return;
 		if (parentFolderPath.trim() === '') {
@@ -513,9 +515,10 @@ export function getFolder(
 ): TFolder | TAbstractFile | null {
 	if (!file) return null;
 	let folderName = extractFolderName(plugin.settings.folderNoteName, file.basename);
+	const fileStorage = storageLocation ?? getStorageLocation(plugin, getFolderPathFromString(file.path));
 	if (
 		plugin.settings.folderNoteName === file.basename &&
-		plugin.settings.storageLocation === 'insideFolder'
+		fileStorage === 'insideFolder'
 	) {
 		folderName = file.parent?.name ?? '';
 	}
@@ -523,11 +526,7 @@ export function getFolder(
 	let folderPath = getFolderPathFromString(file.path);
 	let folder: TFolder | TAbstractFile | null = null;
 
-	if (
-		(plugin.settings.storageLocation === 'parentFolder' ||
-			storageLocation === 'parentFolder') &&
-		storageLocation !== 'insideFolder'
-	) {
+	if (fileStorage === 'parentFolder') {
 		if (folderPath.trim() === '' || folderPath === '/') {
 			folderPath = folderName;
 		} else {
@@ -556,7 +555,8 @@ export function getFolderNoteFolder(
 		filePath = folderNote.path;
 	}
 	const folderName = extractFolderName(plugin.settings.folderNoteName, fileName);
-	if (!plugin.settings.folderNoteName.includes('{{folder_name}}') && plugin.settings.storageLocation === 'insideFolder') {
+	const noteStorage = getStorageLocation(plugin, getFolderPathFromString(filePath));
+	if (!plugin.settings.folderNoteName.includes('{{folder_name}}') && noteStorage === 'insideFolder') {
 		if (folderNote instanceof TFile) {
 			return folderNote.parent;
 		}
@@ -565,7 +565,7 @@ export function getFolderNoteFolder(
 	}
 	if (!folderName) return null;
 	let folderPath = getFolderPathFromString(filePath);
-	if (plugin.settings.storageLocation === 'parentFolder') {
+	if (noteStorage === 'parentFolder') {
 		if (folderPath.trim() === '') {
 			folderPath = folderName;
 		} else {
@@ -605,11 +605,8 @@ function adjustFolderPathForStorage(
 	plugin: FolderNotesPlugin,
 	storageLocation?: string,
 ): void {
-	if (
-		(plugin.settings.storageLocation === 'parentFolder' ||
-			storageLocation === 'parentFolder') &&
-		storageLocation !== 'insideFolder'
-	) {
+	const effective = storageLocation ?? getStorageLocation(plugin, getFolderPathFromString(folderPath));
+	if (effective === 'parentFolder') {
 		folder.path = getFolderPathFromString(folderPath);
 	}
 }

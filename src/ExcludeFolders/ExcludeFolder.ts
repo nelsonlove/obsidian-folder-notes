@@ -15,6 +15,8 @@ export class ExcludedFolder {
 	detached: boolean = false;
 	detachedFilePath?: string;
 	showFolderNote: boolean;
+	/** Overrides the global storage location for this folder. Unset = inherit. */
+	storageLocation?: string;
 	constructor(path: string, position: number, id: string | undefined, plugin: FolderNotesPlugin) {
 		this.type = 'folder';
 		this.id = id || crypto.randomUUID();
@@ -30,5 +32,6 @@ export class ExcludedFolder {
 		this.string = '';
 		this.hideInSettings = false;
 		this.showFolderNote = plugin.settings.excludeFolderDefaultSettings.showFolderNote;
+		this.storageLocation = plugin.settings.excludeFolderDefaultSettings.storageLocation;
 	}
 }
